@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Potencias y Raíces</title>
+    <!-- KaTeX CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <!-- KaTeX JS -->
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <!-- Auto-render extension -->
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', sans-serif;
+            background-color: #eef7fa;
+            padding: 20px;
+        }
+        h2, h3 {
+            color: #0066cc;
+        }
+        .step {
+            background-color: #ffffff;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #00b300;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #009900;
+        }
+        .result {
+            font-size: 20px;
+            color: #333;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .feedback-correct {
+            color: green;
+        }
+        .feedback-incorrect {
+            color: red;
+        }
+        .hint {
+            color: blue;
+        }
+        .option {
+            margin: 10px 0;
+        }
+        #finalScore {
+            font-size: 24px;
+            color: #0066cc;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Juego de Potencias y Raíces</h2>
+    <div id="game-container">
+        <div id="question-container" class="step">
+            <h3 id="question"></h3>
+            <div id="options"></div>
+            <button onclick="checkAnswer()">Comprobar</button>
+            <div id="feedback" class="result"></div>
+        </div>
+        <div id="score-container" class="step" style="display: none;">
+            <h3>Juego terminado</h3>
+            <div id="finalScore"></div>
+            <button onclick="restartGame()">Jugar de nuevo</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "¿Cuánto es \\(2^4\\)?",
+                options: ["\\(8\\)", "\\(16\\)", "\\(32\\)", "\\(64\\)"],
+                correctAnswer: 1,
+                hints: [
+                    "Recuerda que \\(2^4 = 2 \\times 2 \\times 2 \\times 2\\).",
+                    "Calcula paso a paso: \\(2 \\times 2 = 4\\), \\(4 \\times 2 = 8\\), \\(8 \\times 2 = ?\\)",
+                    "El resultado es \\(16\\)."
+                ]
+            },
+            {
+                question: "¿Cuál es la raíz cúbica de \\(27\\)?",
+                options: ["\\(3\\)", "\\(9\\)", "\\(27\\)", "\\(81\\)"],
+                correctAnswer: 0,
+                hints: [
+                    "La raíz cúbica busca un número que al multiplicarse tres veces dé \\(27\\).",
+                    "Calcula \\(3 \\times 3 \\times 3\\).",
+                    "\\(3 \\times 3 = 9\\), \\(9 \\times 3 = 27\\).",
+                    "Por lo tanto, la raíz cúbica de \\(27\\) es \\(3\\)."
+                ]
+            },
+            {
+                question: "Simplifica la expresión \\(\\sqrt{81}\\).",
+                options: ["\\(9\\)", "\\(18\\)", "\\(27\\)", "\\(81\\)"],
+                correctAnswer: 0,
+                hints: [
+                    "Busca un número que al cuadrado dé \\(81\\).",
+                    "Calcula \\(9 \\times 9\\).",
+                    "\\(9 \\times 9 = 81\\).",
+                    "Entonces, \\(\\sqrt{81} = 9\\)."
+                ]
+            },
+            {
+                question: "¿Cuánto es \\(10^0\\)?",
+                options: ["\\(0\\)", "\\(1\\)", "\\(10\\)", "\\(\frac{1}{10}\\)"],
+                correctAnswer: 1,
+                hints: [
+                    "Cualquier número elevado a la potencia cero es...",
+                    "Por definición, \\(a^0 = 1\\) si \\(a \\neq 0\\).",
+                    "Por lo tanto, \\(10^0 = 1\\)."
+                ]
+            },
+            {
+                question: "Expresa \\(\\frac{1}{2^3}\\) como potencia de base 2.",
+                options: ["\\(2^{-3}\\)", "\\(2^3\\)", "\\(2^{-1}\\)", "\\(2^1\\)"],
+                correctAnswer: 0,
+                hints: [
+                    "Una fracción con potencia en el denominador puede expresarse con exponente negativo.",
+                    "Recuerda que \\(\\frac{1}{a^n} = a^{-n}\\).",
+                    "Entonces, \\(\\frac{1}{2^3} = 2^{-3}\\)."
+                ]
+            },
+            {
+                question: "Calcula \\(\\sqrt[3]{8}\\).",
+                options: ["\\(2\\)", "\\(4\\)", "\\(6\\)", "\\(8\\)"],
+                correctAnswer: 0,
+                hints: [
+                    "Busca un número que al multiplicarse tres veces dé \\(8\\).",
+                    "Calcula \\(2 \\times 2 \\times 2\\).",
+                    "\\(2 \\times 2 = 4\\), \\(4 \\times 2 = 8\\).",
+                    "Entonces, \\(\\sqrt[3]{8} = 2\\)."
+                ]
+            },
+            {
+                question: "Simplifica \\(2^3 \\times 2^2\\).",
+                options: ["\\(2^5\\)", "\\(2^6\\)", "\\(2^8\\)", "\\(2^9\\)"],
+                correctAnswer: 0,
+                hints: [
+                    "Cuando multiplicas potencias de la misma base, sumas los exponentes.",
+                    "Así, \\(2^3 \\times 2^2 = 2^{3+2}\\).",
+                    "Entonces, \\(2^5\\) es la respuesta."
+                ]
+            },
+            {
+                question: "Calcula \\( (3^2)^2 \\).",
+                options: ["\\(3^4\\)", "\\(3^6\\)", "\\(6^2\\)", "\\(81\\)"],
+                correctAnswer: 3,
+                hints: [
+                    "Cuando elevas una potencia a otra potencia, multiplicas los exponentes.",
+                    "Así, \\((3^2)^2 = 3^{2 \\times 2} = 3^4\\).",
+                    "Calcula \\(3^4 = 3 \\times 3 \\times 3 \\times 3\\).",
+                    "\\(3^4 = 81\\)."
+                ]
+            },
+            {
+                question: "¿Cuál es el valor de \\(\\sqrt{\\frac{1}{16}}\\)?",
+                options: ["\\(\\frac{1}{4}\\)", "\\(\\frac{1}{8}\\)", "\\(4\\)", "\\(16\\)"],
+                correctAnswer: 0,
+                hints: [
+                    "La raíz cuadrada de una fracción es la raíz del numerador sobre la raíz del denominador.",
+                    "Calcula \\(\\sqrt{1} = 1\\) y \\(\\sqrt{16} = 4\\).",
+                    "Entonces, \\(\\sqrt{\\frac{1}{16}} = \\frac{1}{4}\\)."
+                ]
+            },
+            {
+                question: "Expresa \\(64\\) como potencia de base \\(2\\).",
+                options: ["\\(2^5\\)", "\\(2^6\\)", "\\(2^7\\)", "\\(2^8\\)"],
+                correctAnswer: 1,
+                hints: [
+                    "Calcula las potencias de \\(2\\) hasta llegar a \\(64\\).",
+                    "\\(2^5 = 32\\), \\(2^6 = 64\\).",
+                    "Por lo tanto, \\(64 = 2^6\\)."
+                ]
+            },
+            {
+                question: "¿Cuánto es \\(9^{\\frac{1}{2}}\\)?",
+                options: ["\\(3\\)", "\\(9\\)", "\\(81\\)", "\\(\\frac{1}{9}\\)"],
+                correctAnswer: 0,
+                hints: [
+                    "Un exponente fraccionario indica una raíz.",
+                    "\\(a^{\\frac{1}{n}} = \\sqrt[n]{a}\\).",
+                    "Entonces, \\(9^{\\frac{1}{2}} = \\sqrt{9} = 3\\)."
+                ]
+            },
+            {
+                question: "Simplifica \\( (x^3)^2 \\).",
+                options: ["\\(x^5\\)", "\\(x^6\\)", "\\(x^9\\)", "\\(x^{32}\\)"],
+                correctAnswer: 1,
+                hints: [
+                    "Cuando elevas una potencia a otra potencia, multiplicas los exponentes.",
+                    "Así, \\( (x^3)^2 = x^{3 \\times 2} = x^6 \\).",
+                    "La respuesta es \\(x^6\\)."
+                ]
+            },
+            {
+                question: "Calcula \\( \\sqrt{49} \\).",
+                options: ["\\(6\\)", "\\(7\\)", "\\(8\\)", "\\(9\\)"],
+                correctAnswer: 1,
+                hints: [
+                    "Busca un número que al cuadrado dé \\(49\\).",
+                    "Calcula \\(7 \\times 7\\).",
+                    "\\(7 \\times 7 = 49\\).",
+                    "Entonces, \\(\\sqrt{49} = 7\\)."
+                ]
+            },
+            {
+                question: "¿Cuánto es \\(2^{-2}\\)?",
+                options: ["\\(4\\)", "\\(\\frac{1}{4}\\)", "\\(\\frac{1}{2}\\)", "\\(-4\\)"],
+                correctAnswer: 1,
+                hints: [
+                    "Un exponente negativo indica el inverso multiplicativo.",
+                    "\\(a^{-n} = \\frac{1}{a^n}\\).",
+                    "Entonces, \\(2^{-2} = \\frac{1}{2^2} = \\frac{1}{4}\\)."
+                ]
+            },
+            {
+                question: "Simplifica \\( \\sqrt{25x^2} \\).",
+                options: ["\\(5x\\)", "\\(25x\\)", "\\(5x^2\\)", "\\(x^2\\)"],
+                correctAnswer: 0,
+                hints: [
+                    "La raíz de un producto es el producto de las raíces.",
+                    "\\(\\sqrt{25} = 5\\) y \\(\\sqrt{x^2} = x\\) (asumiendo \\(x \\geq 0\\)).",
+                    "Entonces, \\(\\sqrt{25x^2} = 5x\\)."
+                ]
+            },
+            {
+                question: "Calcula \\( \\left( \\frac{1}{3} \\right)^{-2} \\).",
+                options: ["\\(\\frac{1}{9}\\)", "\\(3\\)", "\\(9\\)", "\\(\\frac{1}{3}\\)"],
+                correctAnswer: 2,
+                hints: [
+                    "Un exponente negativo invierte la base.",
+                    "\\(\\left( \\frac{1}{a} \\right)^{-n} = a^n\\).",
+                    "Entonces, \\( \\left( \\frac{1}{3} \\right)^{-2} = 3^2 = 9 \\)."
+                ]
+            },
+            {
+                question: "¿Cuál es el valor de \\(16^{\\frac{3}{4}}\\)?",
+                options: ["\\(8\\)", "\\(16\\)", "\\(32\\)", "\\(64\\)"],
+                correctAnswer: 0,
+                hints: [
+                    "Un exponente fraccionario combina potencia y raíz.",
+                    "\\(a^{\\frac{m}{n}} = \\sqrt[n]{a^m}\\).",
+                    "Calcula \\( \\sqrt[4]{16^3} \\).",
+                    "\\( \\sqrt[4]{4096} = 8 \\)."
+                ]
+            },
+            {
+                question: "Simplifica \\( \\sqrt{2} \\times \\sqrt{8} \\).",
+                options: ["\\(4\\)", "\\(2\\sqrt{2}\\)", "\\(2\\sqrt{8}\\)", "\\(\\sqrt{16}\\)"],
+                correctAnswer: 0,
+                hints: [
+                    "Multiplica las raíces: \\( \\sqrt{2 \\times 8} = \\sqrt{16} \\).",
+                    "Sabemos que \\(\\sqrt{16} = 4\\).",
+                    "Entonces, el resultado es \\(4\\)."
+                ]
+            },
+            {
+                question: "Calcula \\(27^{\\frac{2}{3}}\\).",
+                options: ["\\(3\\)", "\\(9\\)", "\\(27\\)", "\\(81\\)"],
+                correctAnswer: 1,
+                hints: [
+                    "Primero, \\(\\sqrt[3]{27} = 3\\).",
+                    "Luego, eleva al cuadrado: \\(3^2 = 9\\).",
+                    "Entonces, \\(27^{\\frac{2}{3}} = 9\\)."
+                ]
+            },
+            {
+                question: "Simplifica \\( (a^2b^3)^2 \\).",
+                options: ["\\(a^4b^6\\)", "\\(a^2b^5\\)", "\\(a^4b^9\\)", "\\(a^2b^6\\)"],
+                correctAnswer: 0,
+                hints: [
+                    "Eleva cada factor al exponente exterior.",
+                    "\\( (a^2)^2 = a^{2 \\times 2} = a^4 \\).",
+                    "\\( (b^3)^2 = b^{3 \\times 2} = b^6 \\).",
+                    "Entonces, \\(a^4b^6\\) es la respuesta."
+                ]
+            },
+            {
+                question: "Calcula \\( \\sqrt{0.25} \\).",
+                options: ["\\(0.5\\)", "\\(0.25\\)", "\\(0.75\\)", "\\(1\\)"],
+                correctAnswer: 0,
+                hints: [
+                    "Busca un número que al cuadrado dé \\(0.25\\).",
+                    "Calcula \\(0.5 \\times 0.5 = 0.25\\).",
+                    "Entonces, \\(\\sqrt{0.25} = 0.5\\)."
+                ]
+            },
+            {
+                question: "¿Cuál es el resultado de \\( (2^{3})^{4} \\)?",
+                options: ["\\(2^{7}\\)", "\\(2^{12}\\)", "\\(2^{64}\\)", "\\(2^{81}\\)"],
+                correctAnswer: 1,
+                hints: [
+                    "Multiplica los exponentes: \\(2^{3 \\times 4} = 2^{12}\\).",
+                    "Entonces, la respuesta es \\(2^{12}\\).",
+                    "Si quieres el valor numérico: \\(2^{12} = 4096\\)."
+                ]
+            },
+            {
+                question: "Simplifica \\( \\sqrt{\\frac{9}{16}} \\).",
+                options: ["\\(\\frac{3}{4}\\)", "\\(\\frac{9}{4}\\)", "\\(\\frac{4}{3}\\)", "\\(\\frac{16}{9}\\)"],
+                correctAnswer: 0,
+                hints: [
+                    "La raíz de una fracción es la fracción de las raíces.",
+                    "Calcula \\(\\sqrt{9} = 3\\) y \\(\\sqrt{16} = 4\\).",
+                    "Entonces, \\(\\sqrt{\\frac{9}{16}} = \\frac{3}{4}\\)."
+                ]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let hintIndex = 0;
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function displayQuestion() {
+            const questionElement = document.getElementById('question');
+            const optionsElement = document.getElementById('options');
+            const currentQuestion = questions[currentQuestionIndex];
+
+            questionElement.innerHTML = currentQuestion.question;
+            optionsElement.innerHTML = '';
+
+            for (let i = 0; i < currentQuestion.options.length; i++) {
+                const option = document.createElement('div');
+                option.className = 'option';
+                option.innerHTML = `
+                    <input type="radio" name="answer" id="option${i}" value="${i}">
+                    <label for="option${i}">${currentQuestion.options[i]}</label>
+                `;
+                optionsElement.appendChild(option);
+            }
+
+            document.getElementById('feedback').innerHTML = '';
+            hintIndex = 0;
+
+            // Renderiza las expresiones LaTeX después de actualizar el contenido
+            renderMathInElement(questionElement);
+            renderMathInElement(optionsElement);
+        }
+
+        function checkAnswer() {
+            const selectedOption = document.querySelector('input[name="answer"]:checked');
+            const feedbackElement = document.getElementById('feedback');
+            const currentQuestion = questions[currentQuestionIndex];
+
+            if (selectedOption) {
+                const answer = parseInt(selectedOption.value);
+
+                if (answer === currentQuestion.correctAnswer) {
+                    feedbackElement.innerHTML = "¡Correcto! ¡Muy bien!";
+                    feedbackElement.className = "result feedback-correct";
+                    score++;
+                    currentQuestionIndex++;
+
+                    if (currentQuestionIndex < questions.length) {
+                        setTimeout(displayQuestion, 2000);
+                    } else {
+                        setTimeout(showFinalScore, 2000);
+                    }
+                } else {
+                    if (hintIndex < currentQuestion.hints.length) {
+                        feedbackElement.innerHTML = `<span class="hint">Pista: ${currentQuestion.hints[hintIndex]}</span>`;
+                        feedbackElement.className = "result";
+                        hintIndex++;
+                        renderMathInElement(feedbackElement);
+                    } else {
+                        feedbackElement.innerHTML = "Lo siento, no es correcto. La respuesta correcta es: " + currentQuestion.options[currentQuestion.correctAnswer];
+                        feedbackElement.className = "result feedback-incorrect";
+                        renderMathInElement(feedbackElement);
+                        currentQuestionIndex++;
+
+                        if (currentQuestionIndex < questions.length) {
+                            setTimeout(displayQuestion, 4000);
+                        } else {
+                            setTimeout(showFinalScore, 4000);
+                        }
+                    }
+                }
+            } else {
+                feedbackElement.innerHTML = "Por favor, selecciona una respuesta.";
+                feedbackElement.className = "result feedback-incorrect";
+            }
+        }
+
+        function showFinalScore() {
+            document.getElementById('question-container').style.display = 'none';
+            document.getElementById('score-container').style.display = 'block';
+            const scoreElement = document.getElementById('finalScore');
+            scoreElement.innerHTML = `Tu puntuación final es: ${score}/${questions.length}`;
+
+            if (score === questions.length) {
+                scoreElement.innerHTML += "<br>¡Felicidades! ¡Has respondido todas las preguntas correctamente!";
+            } else if (score >= questions.length / 2) {
+                scoreElement.innerHTML += "<br>¡Buen trabajo! Has respondido más de la mitad de las preguntas correctamente.";
+            } else {
+                scoreElement.innerHTML += "<br>Sigue practicando. ¡Lo harás mejor la próxima vez!";
+            }
+        }
+
+        function restartGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            shuffleArray(questions);
+            document.getElementById('question-container').style.display = 'block';
+            document.getElementById('score-container').style.display = 'none';
+            displayQuestion();
+        }
+
+        shuffleArray(questions);
+        displayQuestion();
+    </script>
+    <!-- KaTeX Auto-render -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: "\\(", right: "\\)", display: false},
+                    {left: "\\[", right: "\\]", display: true}
+                ]
+            });
+        });
+    </script>
+</body>
+</html>
